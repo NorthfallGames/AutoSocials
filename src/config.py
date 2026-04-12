@@ -54,6 +54,27 @@ def get_verbose() -> bool:
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
         return json.load(file)["verbose"]
 
+def get_tts_voice_file() -> str:
+    """
+        Gets the configured TTS Voice.
+
+        Returns:
+            File location (str): The file location of the TTS voice
+        """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return json.load(file).get("tts_details").get("tts_voice_file").strip().lower()
+
+def get_tts_device() -> str:
+    """
+        Gets the configured TTS device.
+
+        Returns:
+            CPU or Cuda (str): The device to run TTS on
+        """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return json.load(file).get("tts_details", {}).get("tts_device", "cpu").strip().lower()
+
+# Fix all the below
 def get_llm_provider() -> str:
     """
     Gets the configured LLM provider.

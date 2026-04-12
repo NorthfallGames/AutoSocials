@@ -245,14 +245,14 @@ def main() -> int:
                 else:
                     warn("default_model is not set.")
     else:
-        reachable, detail = check_url("http://127.0.0.1:11434/api/tags")
+        reachable, detail = check_url(f"{llm_base_raw}/api/tags")
         if not reachable:
-            fail(f"Ollama is not reachable at http://127.0.0.1:11434/: |__ {detail}")
+            fail(f"Ollama is not reachable at {llm_base_raw}/: |__ {detail}")
             failures += 1
         else:
-            ok("Ollama reachable at http://127.0.0.1:11434")
+            ok(f"Ollama reachable at {llm_base_raw}")
             try:
-                response = requests.get("http://127.0.0.1:11434/api/tags", timeout=5)
+                response = requests.get(f"{llm_base_raw}/api/tags", timeout=5)
                 response.raise_for_status()
                 tags = response.json()
                 models = [m.get("name") for m in tags.get("models", []) if m.get("name")]

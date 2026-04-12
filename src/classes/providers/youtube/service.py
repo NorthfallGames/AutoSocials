@@ -1,7 +1,9 @@
 from classes.providers.base_service import BaseProviderService
+from status import error, info, success
 from importlib import import_module
-from status import info, success
 
+from Tts import TTS
+from lm_provider import generate_text
 
 class YouTubeService(BaseProviderService):
     """
@@ -38,6 +40,69 @@ class YouTubeService(BaseProviderService):
             niche=niche,
         )
 
+
+    def generate_topic(self) -> str:
+        """
+        Generates a topic based on the YouTube Channel niche.
+
+        Returns:
+            topic (str): The generated topic.
+        """
+        info("Loading prompt:")
+        load_and_render_prompt = import_module("prompt_loader").load_and_render_prompt
+        prompt = load_and_render_prompt(
+            prompt_name="generate_script",
+            provider="youtube",
+            provider_name="YouTube",
+            niche=self.niche,
+        )
+        success(f"Prompt loaded successfully: {prompt} ")
+        info("Generating topic using LLM...")
+
+        # Get the response
+        completion = generate_text(prompt)
+        success(f"Topic generated successfully: {completion}")
+
+        if not completion:
+            error("Failed to generate Topic.")
+
+        self.subject = completion
+
+        return completion
+
+    def generate_video(self) -> None:
+        """
+        Stub for future video generation logic.
+        """
+        """load_and_render_prompt = import_module("prompt_loader").load_and_render_prompt
+        prompt = load_and_render_prompt(
+            prompt_name="generate_video",
+            provider="youtube",
+            provider_name="YouTube",
+            account_nickname=self.account_nickname,
+            niche=self.niche,
+        )
+        
+        info("Loaded LM prompt template for YouTube.")
+        info(prompt, False)
+        info("generate_video() is not implemented yet.")
+
+        info("Testing the TTS")
+        tts = TTS()
+        tts.generate_test_audio()
+        """
+
+        self.generate_topic()
+
+
+    def upload_video(self) -> None:
+        """
+        Stub for future upload logic.
+        """
+        info("upload_video() is not implemented yet.")
+
+
+
     def test_connection(self) -> None:
         """
         Stub method to verify the service is wired correctly.
@@ -47,25 +112,3 @@ class YouTubeService(BaseProviderService):
         info(f"Nickname: {self.account_nickname}", False)
         info(f"Niche: {self.niche}", False)
         info(f"Firefox Profile: {self.firefox_profile_path}", False)
-
-    def generate_video(self) -> None:
-        """
-        Stub for future video generation logic.
-        """
-        load_and_render_prompt = import_module("prompt_loader").load_and_render_prompt
-        prompt = load_and_render_prompt(
-            prompt_name="generate_video",
-            provider="youtube",
-            provider_name="YouTube",
-            account_nickname=self.account_nickname,
-            niche=self.niche,
-        )
-        info("Loaded LM prompt template for YouTube.")
-        info(prompt, False)
-        info("generate_video() is not implemented yet.")
-
-    def upload_video(self) -> None:
-        """
-        Stub for future upload logic.
-        """
-        info("upload_video() is not implemented yet.")

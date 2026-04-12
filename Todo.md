@@ -3,14 +3,17 @@
 ## High Priority
 
 - [ ] Finish provider support for the remaining platforms
+  - [ ] `Youtube`
   - [ ] `Twitter`
-  - [ ] `Facebook`
-  - [ ] `LinkedIn`
   - [ ] `Instagram`
-  - [ ] `Reddit`
+  - [ ] `LinkedIn`
+  - [ ] `Facebook`
   - [ ] `TikTok`
+  - [ ] `Reddit`
 - [ ] Replace the remaining YouTube stubs with real session, generation, and upload flow
 - [ ] Wire each provider into the main menu / launcher flow so every option works end-to-end
+- [ ] Chatterbox TTS to have custom voices instead of AI sounding robotic voice
+- [ ] Fix the Config.py file as it uses the old loading method and doesn't work with the new config structure
 
 ## Configuration & Runtime
 
@@ -18,6 +21,7 @@
 - [ ] Verify `src/lm_provider.py` matches the active config schema and provider requirements
 - [ ] Make resource and asset paths fully portable across Windows and other environments
 - [ ] Confirm account caching and session handling works consistently after provider changes
+- [ ] Ensure we have CUDA and not CPU for Chatterbox TTS
 
 ## Product & Workflow
 

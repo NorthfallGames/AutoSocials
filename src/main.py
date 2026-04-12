@@ -15,6 +15,10 @@ from classes.providers.twitter import TwitterMenuController
 from classes.providers.linkedin import LinkedinMenuController
 from classes.providers.facebook import FacebookMenuController
 
+import warnings
+
+# Stops the chatterbox Perth warning
+warnings.filterwarnings("ignore", category=UserWarning)
 
 MENU_CONTROLLERS = {
     1: YouTubeMenuController,
@@ -55,6 +59,7 @@ def show_main_menu() -> int:
     while True:
         try:
             print_banner()
+
             info("\n============ OPTIONS ============", False)
 
             for idx, option in enumerate(OPTIONS, start=1):

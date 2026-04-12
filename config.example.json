@@ -5,7 +5,6 @@
   "llm_details": {
     "llm_provider": "lmstudio",
     "NN_llm_provider_comments": "Only supported providers are Ollama, LM Studio, and OpenRouter.",
-    "llm_endpoint": "qwen/qwen3.5-9b",
     "llm_base_url": "http://127.0.0.1:11434",
     "NN_llm_base_url_comments": "Any endpoint - ollama or any openAI compatible endpoint",
     "llm_api_key": "",
@@ -26,5 +25,12 @@
     "stt_provider": "local_whisper",
     "whisper_model": "base",
     "whisper_device": "auto"
+  },
+  "tts_details": {
+    "tts_provider": "chatterbox",
+    "tts_device": "auto",
+    "NN_tts_device_comments": "TTS device selection: auto, cpu, or cuda. On Windows, auto defaults to CPU for stability; set cuda to force GPU.",
+    "tts_voice_file": "Assets\\TTS_Voice.wav",
+    "NN_tts_voice_file_comments": "This should be the path to a .wav file that Chatterbox can use as a voice. The file should be a recording of the voice you want to use for TTS. Make sure the audio is clear and of good quality for the best results. You can use any .wav file, but it's recommended to use a recording of the voice you want to synthesize for better results."
   }
 }
