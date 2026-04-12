@@ -8,6 +8,8 @@ AutoSocials is a local-first automation scaffold for social-content workflows. T
 
 The repository targets **Python 3.12**.
 
+This repository is a full rewrite with a local-first focus. It keeps external hosted providers optional and prioritises local tooling (for example local LLM endpoints and local ComfyUI) where possible.
+
 ## What this repo currently does
 
 - validates local readiness with `Scripts/preflight_checks.py`
@@ -61,7 +63,7 @@ The current layout is nested:
     "llm_provider": "lmstudio",
     "llm_endpoint": "qwen/qwen3.5-9b",
     "llm_base_url": "http://127.0.0.1:11434",
-    "openrouter_api_key": "",
+    "llm_api_key": "",
     "default_model": "qwen/qwen3.5-9b"
   },
   "llm_image_details": {
@@ -91,7 +93,7 @@ Used for text-model provider selection and model defaults.
 - `llm_provider`: `lmstudio`, `ollama`, or `openrouter`
 - `llm_endpoint`: model name or endpoint identifier used by the app
 - `llm_base_url`: local or remote base URL for the selected provider
-- `openrouter_api_key`: required if you use OpenRouter
+- `llm_api_key`: API key used for OpenAI-compatible providers; required for OpenRouter (or set `LLM_API_KEY` in your environment)
 - `default_model`: fallback model name used by the app
 
 ### `llm_image_details`
@@ -131,6 +133,12 @@ It currently checks:
 - Ollama is reachable when the fallback path is used
 - `faster-whisper` is installed when `stt_provider=local_whisper`
 - optional local paths such as `firefox_profile` and `imagemagick_path`
+
+## Origins and attribution
+
+This project draws ideas and some early code references from [MoneyPrinterV2](https://github.com/FujiwaraChoki/MoneyPrinterV2).
+
+AutoSocials is now a full rewrite tailored to this repository's architecture and local-first runtime goals, including selected improvements inspired by community PR discussions while keeping hosted providers/services (for example OpenRouter or NanoBanana-style APIs) optional.
 
 ## Main launcher
 
