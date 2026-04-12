@@ -8,5 +8,12 @@ TWITTER_POST_BUTTON_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/d
 OPTIONS = [
     "YouTube Shorts Automater",
     "Twitter Bot",
+    "LinkedIn Bot",
     "Quit"
 ]
+
+SUPPORTED_PROVIDERS = frozenset({
+    "twitter",
+    "youtube",
+    "linkedin",
+})

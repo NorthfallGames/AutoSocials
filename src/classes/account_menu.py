@@ -67,6 +67,8 @@ class BaseAccountMenuController:
             "id": generated_uuid,
             "firefox_profile": get_firefox_profile_path(),
             "videos": [],
+            "posts": [],
+            "images": [],
         }
 
         for key, prompt in self.account_fields:

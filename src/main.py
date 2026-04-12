@@ -11,20 +11,25 @@ from status import *
 from constants import *
 from classes.youtube import YouTubeMenuController
 from classes.twitter import TwitterMenuController
+from classes.linkedin import LinkedInMenuController
 
 youtube_controller = YouTubeMenuController()
 twitter_controller = TwitterMenuController()
+linkedin_controller = LinkedInMenuController()
 
 def main():
     """Main entry point for the application, providing a menu-driven interface
-        to manage YouTube, Twitter bots, Affiliate Marketing, and Outreach tasks.
+        to manage YouTube, Twitter, and LinkedIn automation tasks.
 
         This function allows users to:
         1. Start the YouTube Shorts Automater to manage YouTube accounts,
            generate and upload videos, and set up CRON jobs.
         2. Start a Twitter Bot to manage Twitter accounts, post tweets, and
            schedule posts using CRON jobs.
-        3. Exit the application.
+        3. Start a LinkedIn Bot to manage LinkedIn accounts and automate
+           LinkedIn-related tasks.
+        4. Exit the application.t to manage LinkedIn activity.
+        4. Exit the application.
 
         The function continuously prompts users for input, validates it, and
         executes the selected option until the user chooses to quit.
@@ -61,6 +66,9 @@ def main():
             twitter_controller.run()
 
         case 3:
+            linkedin_controller.run()
+
+        case 4:
             if get_verbose():
                 print(colored(" => Quitting...", "blue"))
             sys.exit(0)

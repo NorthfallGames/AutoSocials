@@ -3,6 +3,7 @@ import json
 
 from typing import List
 from config import ROOT_DIR
+from constants import SUPPORTED_PROVIDERS
 
 def get_cache_path() -> str:
     """
@@ -13,43 +14,38 @@ def get_cache_path() -> str:
     """
     return os.path.join(ROOT_DIR, '.as')
 
-def get_twitter_cache_path() -> str:
+def get_social_cache_path(social: str) -> str:
     """
-    Gets the path to the Twitter cache file.
+    Gets the cache file path for any social/provider.
+
+    Args:
+        social (str): Provider name (e.g. "twitter", "youtube", "linkedin")
 
     Returns:
-        path (str): The path to the Twitter cache folder
+        str: Full path to the provider cache file
     """
-    return os.path.join(get_cache_path(), 'twitter.json')
+    return os.path.join(get_cache_path(), f"{social}.json")
 
-def get_youtube_cache_path() -> str:
-    """
-    Gets the path to the YouTube cache file.
-
-    Returns:
-        path (str): The path to the YouTube cache folder
-    """
-    return os.path.join(get_cache_path(), 'youtube.json')
 
 def get_provider_cache_path(provider: str) -> str:
     """
     Gets the cache path for a supported account provider.
 
     Args:
-        provider (str): The provider name ("twitter" or "youtube")
+        provider (str): The provider name
 
     Returns:
-        path (str): The provider-specific cache path
+        str: The provider-specific cache path
 
     Raises:
         ValueError: If the provider is unsupported
     """
-    if provider == "twitter":
-        return get_twitter_cache_path()
-    if provider == "youtube":
-        return get_youtube_cache_path()
+    if provider not in SUPPORTED_PROVIDERS:
+        raise ValueError(
+            f"Unsupported provider '{provider}'. Expected one of: {', '.join(SUPPORTED_PROVIDERS)}"
+        )
 
-    raise ValueError(f"Unsupported provider '{provider}'. Expected 'twitter' or 'youtube'.")
+    return get_social_cache_path(provider)
 
 def get_accounts(provider: str) -> List[dict]:
     """
@@ -87,7 +83,7 @@ def add_account(provider: str, account: dict) -> None:
     Adds an account to the cache.
 
     Args:
-        provider (str): The provider to add the account to ("twitter" or "youtube")
+        provider (str): The provider to add the account to.
         account (dict): The account to add
 
     Returns:
@@ -112,7 +108,7 @@ def remove_account(provider: str, account_id: str) -> bool:
     Removes an account from the cache by id.
 
     Args:
-        provider (str): The provider to remove the account from ("twitter" or "youtube")
+        provider (str): The provider to remove the account from.
         account_id (str): The account id to remove
 
     Returns:
