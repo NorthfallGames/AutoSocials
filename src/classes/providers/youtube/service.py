@@ -1,9 +1,10 @@
 from classes.providers.base_service import BaseProviderService
-from status import error, info, success, warning
 from importlib import import_module
 import re
-from prompt_loader import load_and_render_prompt
+from typing import List
 
+from status import error, info, success, warning
+from prompt_loader import load_and_render_prompt
 from config import *
 from Tts import TTS
 from lm_provider import generate_text
@@ -164,6 +165,65 @@ class YouTubeService(BaseProviderService):
 
         return self.metadata
 
+    def generate_prompts(self) -> List[str]:
+        """
+        Generates AI Image Prompts based on the provided Video Script.
+
+        Returns:
+            image_prompts (List[str]): Generated List of image prompts.
+        """
+        n_prompts = len(self.script) / 3
+
+        info("Loading Title generator:")
+        prompt = load_and_render_prompt(
+            prompt_name="generate_prompts",
+            provider="youtube",
+            provider_name="YouTube",
+            n_prompts=n_prompts,
+            subject=self.subject,
+            script=self.script
+        )
+        if get_verbose():
+            success(f"Prompt loaded successfully: {prompt} ")
+
+        completion = (
+            str(generate_text(prompt))
+            .replace("```json", "")
+            .replace("```", "")
+        )
+
+        image_prompts = []
+
+        if "image_prompts" in completion:
+            image_prompts = json.loads(completion)["image_prompts"]
+        else:
+            try:
+                image_prompts = json.loads(completion)
+                if get_verbose():
+                    info(f" => Generated Image Prompts: {image_prompts}")
+            except Exception:
+                if get_verbose():
+                    warning(
+                        "LLM returned an unformatted response. Attempting to clean..."
+                    )
+
+                # Get everything between [ and ], and turn it into a list
+                r = re.compile(r"\[.*\]")
+                image_prompts = r.findall(completion)
+                if len(image_prompts) == 0:
+                    if get_verbose():
+                        warning("Failed to generate Image Prompts. Retrying...")
+                    return self.generate_prompts()
+
+        if len(image_prompts) > n_prompts:
+            image_prompts = image_prompts[: int(n_prompts)]
+
+        self.image_prompts = image_prompts
+
+        success(f"Generated {len(image_prompts)} Image Prompts.")
+
+        return image_prompts
+
     def generate_video(self) -> None:
         """
         Stub for future video generation logic.
@@ -189,6 +249,13 @@ class YouTubeService(BaseProviderService):
         self.generate_topic()
         self.generate_script()
         self.generate_metadata()
+        self.generate_prompts()
+
+        """
+        for prompt in self.image_prompts:
+            self.generate_image(prompt)
+        """
+
 
 
     def upload_video(self) -> None:
