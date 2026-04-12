@@ -167,9 +167,9 @@ def main() -> int:
         if os.path.isdir(firefox_profile):
             ok(f"firefox_profile exists: {firefox_profile}")
         else:
-            warn(f"firefox_profile does not exist: {firefox_profile}")
+            fail(f"firefox_profile does not exist: {firefox_profile}")
     else:
-        warn("firefox_profile is empty. Twitter/YouTube automation requires this.")
+        fail("firefox_profile is empty. Twitter/YouTube automation requires this.")
 
     # LLM provider
     llm_provider = str(llm_cfg.get("llm_provider", "ollama")).strip().lower()
