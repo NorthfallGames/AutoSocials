@@ -13,12 +13,14 @@ from constants import *
 from classes.providers.youtube import YouTubeMenuController
 from classes.providers.twitter import TwitterMenuController
 from classes.providers.linkedin import LinkedinMenuController
+from classes.providers.facebook import FacebookMenuController
 
 
 MENU_CONTROLLERS = {
     1: YouTubeMenuController,
     2: TwitterMenuController,
     3: LinkedinMenuController,
+    4: FacebookMenuController,
 }
 
 def run_startup_checks() -> None:

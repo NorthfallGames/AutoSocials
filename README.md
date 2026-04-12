@@ -15,6 +15,7 @@ The repository targets **Python 3.12**.
 - lets you create, list, select, and delete cached provider accounts for YouTube, Twitter, and LinkedIn
 - stores and reads configuration from `config.json`
 - generates images through a ComfyUI API workflow using `Scripts/comfy_generate.py`
+- loads editable LM prompt templates from `prompts/` via `src/prompt_loader.py`
 
 ## Installation
 
@@ -187,6 +188,21 @@ After selection, each provider opens a small provider-specific menu with:
 
 At the moment the provider services are lightweight scaffolds: `test_connection()` confirms the service wiring, while `generate_video()` and `upload_video()` are still placeholders.
 
+## Prompt templates
+
+Prompt text for LM-driven tasks now lives in a dedicated `prompts/` folder so you can tune wording without editing Python source.
+
+- shared templates: `prompts/common/`
+- provider-specific templates: `prompts/providers/<provider>/`
+
+The loader in `src/prompt_loader.py` supports:
+
+- `load_prompt(prompt_name, provider=...)` to read template files
+- `render_prompt(template, context={...})` to inject placeholders like `{niche}`
+- `load_and_render_prompt(...)` as a convenience wrapper
+
+Current provider services load `generate_video.txt` from their provider folder, falling back to `prompts/common/generate_video.txt` if needed.
+
 ## ComfyUI workflow testing
 
 The repository includes a standalone ComfyUI test harness in `Scripts/comfy_generate.py`:
@@ -300,6 +316,7 @@ The generated service class is intentionally a stub so you can wire in provider-
 - `src/classes/providers/` - provider implementations for YouTube, Twitter, and LinkedIn
 - `Scripts/` - local validation utilities such as `preflight_checks.py`, `comfy_generate.py`, and `scaffold_provider.py`
 - `Assets/` - static resources, including the default banner and ComfyUI workflow
+- `prompts/` - editable prompt templates used by LM-related flows
 - `output/` - generated files and other runtime artifacts
 
 ## Current limitations

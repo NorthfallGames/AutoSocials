@@ -3,16 +3,16 @@ from importlib import import_module
 from status import info, success
 
 
-class TwitterService(BaseProviderService):
+class FacebookService(BaseProviderService):
     """
-    Service class for Twitter automation.
+    Service class for Facebook automation.
 
-    This should contain the actual Twitter-specific logic such as:
+    This should contain the actual Facebook-specific logic such as:
     - browser/session startup
     - content generation
     - metadata generation
     - upload flow
-    - account-specific Twitter actions
+    - account-specific Facebook actions
     """
 
     def __init__(
@@ -23,7 +23,7 @@ class TwitterService(BaseProviderService):
         niche: str,
     ) -> None:
         """
-        Initialise the Twitter service.
+        Initialise the Facebook service.
 
         Args:
             account_uuid (str): Unique identifier for the account.
@@ -42,7 +42,7 @@ class TwitterService(BaseProviderService):
         """
         Stub method to verify the service is wired correctly.
         """
-        success("Twitter service started successfully.")
+        success("Facebook service started successfully.")
         info(f"UUID: {self.account_uuid}", False)
         info(f"Nickname: {self.account_nickname}", False)
         info(f"Niche: {self.niche}", False)
@@ -55,12 +55,12 @@ class TwitterService(BaseProviderService):
         load_and_render_prompt = import_module("prompt_loader").load_and_render_prompt
         prompt = load_and_render_prompt(
             prompt_name="generate_video",
-            provider="twitter",
-            provider_name="Twitter",
+            provider="facebook",
+            provider_name="Facebook",
             account_nickname=self.account_nickname,
             niche=self.niche,
         )
-        info("Loaded LM prompt template for Twitter.")
+        info("Loaded LM prompt template for Facebook.")
         info(prompt, False)
         info("generate_video() is not implemented yet.")
 

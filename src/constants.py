@@ -9,14 +9,9 @@ OPTIONS = [
     "YouTube Shorts Automater",
     "Twitter Bot",
     "LinkedIn Bot",
+    "Facebook Bot",
     "Quit"
 ]
-
-SUPPORTED_PROVIDERS = frozenset({
-    "twitter",
-    "youtube",
-    "linkedin",
-})
 
 COMMON_ACCOUNT_FIELDS = [
     ("nickname", "a nickname for this account"),

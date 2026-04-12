@@ -11,7 +11,10 @@ from termcolor import colored
 
 ROOT_DIR = os.path.dirname(sys.path[0])
 CONFIG_PATH = os.path.join(ROOT_DIR, "config.json")
-
+PROMPTS_DIR = os.path.join(ROOT_DIR, "prompts")
+REQUIRED_PROMPTS = (
+    os.path.join(PROMPTS_DIR, "common", "generic_prompt.txt"),
+)
 
 def ok(msg: str) -> None:
     print(colored(f"[OK] {msg}", "green"))
@@ -140,6 +143,20 @@ def main() -> int:
     stt_cfg = cfg.get("stt_details", {})
 
     failures = 0
+
+    # Prompt template checks
+    if os.path.isdir(PROMPTS_DIR):
+        ok(f"prompts directory exists: {PROMPTS_DIR}")
+    else:
+        fail(f"Missing prompts directory: {PROMPTS_DIR}")
+        failures += 1
+
+    for prompt_path in REQUIRED_PROMPTS:
+        if os.path.isfile(prompt_path):
+            ok(f"Prompt file exists: {os.path.relpath(prompt_path, ROOT_DIR)}")
+        else:
+            fail(f"Missing required prompt file: {os.path.relpath(prompt_path, ROOT_DIR)}")
+            failures += 1
 
     # STT testing
     stt_provider = str(stt_cfg.get("stt_provider", "local_whisper")).strip().lower()

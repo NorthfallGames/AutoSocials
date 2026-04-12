@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 PROVIDERS_DIR = ROOT_DIR / "src" / "classes" / "providers"
+PROMPTS_PROVIDERS_DIR = ROOT_DIR / "prompts" / "providers"
 
 
 def slug_to_class_prefix(slug: str) -> str:
@@ -125,8 +126,9 @@ class {class_prefix}MenuController(BaseAccountMenuController):
 '''
 
 
-def build_service_template(display_name: str, class_prefix: str) -> str:
+def build_service_template(display_name: str, class_prefix: str, provider_slug: str) -> str:
     return f'''from classes.providers.base_service import BaseProviderService
+from importlib import import_module
 from status import info, success
 
 
@@ -179,6 +181,16 @@ class {class_prefix}Service(BaseProviderService):
         """
         Stub for future video generation logic.
         """
+        load_and_render_prompt = import_module("prompt_loader").load_and_render_prompt
+        prompt = load_and_render_prompt(
+            prompt_name="generate_video",
+            provider="{provider_slug}",
+            provider_name="{display_name}",
+            account_nickname=self.account_nickname,
+            niche=self.niche,
+        )
+        info("Loaded LM prompt template for {display_name}.")
+        info(prompt, False)
         info("generate_video() is not implemented yet.")
 
     def upload_video(self) -> None:
@@ -186,6 +198,18 @@ class {class_prefix}Service(BaseProviderService):
         Stub for future upload logic.
         """
         info("upload_video() is not implemented yet.")
+'''
+
+
+def build_provider_prompt_template(display_name: str) -> str:
+    return f'''You are planning a {display_name} short-form content concept.
+Create one idea tailored to the {{niche}} niche for account "{{account_nickname}}".
+
+Output format:
+- Hook
+- Script outline
+- Caption draft
+- 3 hashtags
 '''
 
 
@@ -219,7 +243,15 @@ def create_provider_scaffold(
     )
     write_file(
         provider_dir / "service.py",
-        build_service_template(display_name, class_prefix),
+        build_service_template(display_name, class_prefix, provider_slug),
+        force=force,
+    )
+
+    provider_prompt_dir = PROMPTS_PROVIDERS_DIR / provider_slug
+    provider_prompt_dir.mkdir(parents=True, exist_ok=True)
+    write_file(
+        provider_prompt_dir / "generate_prompt.txt",
+        build_provider_prompt_template(display_name),
         force=force,
     )
 
@@ -282,7 +314,7 @@ def main() -> int:
         return 1
 
     print(f"Provider scaffold created at: {provider_dir}")
-    print("Generated files: __init__.py, controller.py, service.py")
+    print("Generated files: __init__.py, controller.py, service.py, prompts/providers/<slug>/generate_prompt.txt")
     print("Next: wire the new controller into src/main.py and update constants if needed.")
     return 0
 

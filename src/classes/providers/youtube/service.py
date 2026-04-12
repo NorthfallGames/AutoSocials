@@ -1,4 +1,5 @@
 from classes.providers.base_service import BaseProviderService
+from importlib import import_module
 from status import info, success
 
 
@@ -51,6 +52,16 @@ class YouTubeService(BaseProviderService):
         """
         Stub for future video generation logic.
         """
+        load_and_render_prompt = import_module("prompt_loader").load_and_render_prompt
+        prompt = load_and_render_prompt(
+            prompt_name="generate_video",
+            provider="youtube",
+            provider_name="YouTube",
+            account_nickname=self.account_nickname,
+            niche=self.niche,
+        )
+        info("Loaded LM prompt template for YouTube.")
+        info(prompt, False)
         info("generate_video() is not implemented yet.")
 
     def upload_video(self) -> None:
