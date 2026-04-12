@@ -11,14 +11,15 @@ from status import *
 from constants import *
 
 from classes.providers.youtube import YouTubeMenuController
+from classes.providers.twitter import TwitterMenuController
+from classes.providers.linkedin import LinkedinMenuController
 
 
 MENU_CONTROLLERS = {
     1: YouTubeMenuController,
-    #2: TwitterMenuController,
-    #3: LinkedInMenuController,
+    2: TwitterMenuController,
+    3: LinkedinMenuController,
 }
-
 
 def run_startup_checks() -> None:
     """
