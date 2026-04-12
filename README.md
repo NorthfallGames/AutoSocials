@@ -1,22 +1,20 @@
 # AutoSocials
 
-AutoSocials is a local-first automation scaffold for social-content workflows. The current codebase focuses on three practical pieces:
+AutoSocials is a local-first automation scaffold for social-content workflows. The current codebase centers on three practical entrypoints:
 
-- a menu-driven launcher in `src/main.py`
-- provider/account helpers for YouTube and Twitter in `src/classes/`
-- a standalone ComfyUI workflow tester in `Tests/comfy_generate.py`
+- a menu-driven CLI launcher in `src/main.py`
+- provider/account helpers for YouTube, Twitter, and LinkedIn in `src/classes/`
+- standalone utilities in `Scripts/` for preflight checks, ComfyUI image generation, and provider scaffolding
 
 The repository targets **Python 3.12**.
 
-This repository is a full rewrite with a local-first focus. It keeps external hosted providers optional and prioritises local tooling (for example local LLM endpoints and local ComfyUI) where possible.
-
-## What this repo currently does
+## What this repository currently does
 
 - validates local readiness with `Scripts/preflight_checks.py`
 - opens a simple CLI in `src/main.py`
-- lets you create, list, select, and delete cached provider accounts for YouTube and Twitter
+- lets you create, list, select, and delete cached provider accounts for YouTube, Twitter, and LinkedIn
 - stores and reads configuration from `config.json`
-- generates images through a ComfyUI API workflow using `Tests/comfy_generate.py`
+- generates images through a ComfyUI API workflow using `Scripts/comfy_generate.py`
 
 ## Installation
 
@@ -26,7 +24,7 @@ Create a virtual environment, activate it, and install the dependencies:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-pip install --upgrade pip wheel
+python -m pip install --upgrade pip wheel
 pip install -r requirements.txt
 ```
 
@@ -53,12 +51,13 @@ The current `requirements.txt` includes:
 
 Start from `config.example.json` and keep `config.json` valid JSON.
 
-The current layout is nested:
+The current runtime expects a nested layout:
 
 ```json
 {
   "verbose": true,
   "firefox_profile": "",
+  "imagemagick_path": "Path to magick.exe or on linux/macOS just /usr/bin/convert",
   "llm_details": {
     "llm_provider": "lmstudio",
     "llm_endpoint": "qwen/qwen3.5-9b",
@@ -70,7 +69,7 @@ The current layout is nested:
     "llm_image_provider": "comfyui",
     "image_api_base_url": "http://127.0.0.1:8188",
     "image_api_key": "",
-    "image_model": "SD 1.5 Hyper\\realisticVisionV60B1_v51HyperVAE.safetensors",
+    "image_model": "Illustrious\\illustriousRealism_ilXL10V30.safetensors",
     "image_aspect_ratio": "9:16"
   },
   "stt_details": {
@@ -85,12 +84,13 @@ The current layout is nested:
 
 - `verbose`: enables extra logging in the launcher and helpers
 - `firefox_profile`: local Firefox profile path used by browser automation flows
+- `imagemagick_path`: optional path to `magick.exe` or `convert` for subtitle/image tooling
 
 ### `llm_details`
 
 Used for text-model provider selection and model defaults.
 
-- `llm_provider`: `lmstudio`, `ollama`, or `openrouter`
+- `llm_provider`: `ollama`, `lmstudio`, or `openrouter`
 - `llm_endpoint`: model name or endpoint identifier used by the app
 - `llm_base_url`: local or remote base URL for the selected provider
 - `llm_api_key`: API key used for OpenAI-compatible providers; required for OpenRouter (or set `LLM_API_KEY` in your environment)
@@ -114,9 +114,11 @@ Used for speech-to-text configuration.
 - `whisper_model`: Whisper model size such as `base`, `small`, or `medium`
 - `whisper_device`: runtime target such as `auto`, `cpu`, or `cuda`
 
-### Important note about config migration
+### Legacy config drift
 
-Some legacy helpers in `src/config.py` still read a few top-level config keys directly, while the newer template uses nested blocks. If you are actively using both older and newer helpers, keep an eye on that drift until the config readers are fully unified.
+Some older helpers in `src/config.py` still read top-level keys directly, while the newer scripts and preflight checks use the nested config blocks above. In particular, `src/config.py` still expects values like `firefox_profile`, `llm_provider`, `default_model`, `llm_endpoint`, `ollama_base_url`, and `openrouter_api_key` in their legacy locations.
+
+If you are actively using both the launcher and the newer scripts, keep that drift in mind until the legacy readers are fully unified.
 
 ## Preflight checks
 
@@ -128,39 +130,23 @@ python Scripts\preflight_checks.py
 
 It currently checks:
 
-- `config.json` exists
+- `config.json` exists and is valid JSON
+- `firefox_profile` points to an existing directory
 - the selected LLM provider is reachable or has the expected credentials
 - Ollama is reachable when the fallback path is used
-- `faster-whisper` is installed when `stt_provider=local_whisper`
-- optional local paths such as `firefox_profile` and `imagemagick_path`
-
-## Origins and attribution
-
-This project draws ideas and some early code references from [MoneyPrinterV2](https://github.com/FujiwaraChoki/MoneyPrinterV2).
-
-AutoSocials is now a full rewrite tailored to this repository's architecture and local-first runtime goals, including selected improvements inspired by community PR discussions while keeping hosted providers/services (for example OpenRouter or NanoBanana-style APIs) optional.
+- `faster-whisper` is importable when `stt_provider=local_whisper`
+- optional local paths such as `imagemagick_path`
+- ComfyUI reachability and model availability when `llm_image_provider=comfyui`
 
 ## Main launcher
 
-`src/main.py` now runs a real menu flow rather than a stub. When launched, it:
+`src/main.py` runs the primary CLI flow. When launched, it:
 
 1. prints the ASCII banner
-2. runs the preflight checker
+2. runs `Scripts/preflight_checks.py`
 3. ensures the local `.as` folder exists
-4. opens the provider menu
-
-From the menu you can:
-
-- start the YouTube account flow
-- start the Twitter account flow
-- exit the app
-
-Each provider menu uses the shared account manager in `src/classes/account_menu.py` to:
-
-- list cached accounts
-- create a new account
-- delete an existing account
-- select an account and hand it to the provider-specific controller
+4. cleans temporary files from `.as`
+5. opens the provider menu
 
 Run it with:
 
@@ -168,12 +154,45 @@ Run it with:
 python src\main.py
 ```
 
+From the main menu you can start one of the provider flows or quit the app.
+
+### Provider flows
+
+The current provider menu includes:
+
+- YouTube
+- Twitter
+- LinkedIn
+- Quit
+
+Each provider uses the shared account manager in `src/classes/account_menu.py` to:
+
+- list cached accounts
+- create a new account
+- delete an existing account
+- select an account and hand it to the provider-specific controller
+
+When you create a new account, the shared flow generates a UUID, stores the Firefox profile path from `config.json`, and asks for the common account fields:
+
+- nickname
+- niche
+
+After selection, each provider opens a small provider-specific menu with:
+
+- test service
+- generate video
+- upload video
+- show account details
+- back
+
+At the moment the provider services are lightweight scaffolds: `test_connection()` confirms the service wiring, while `generate_video()` and `upload_video()` are still placeholders.
+
 ## ComfyUI workflow testing
 
-The repository also includes a standalone ComfyUI test harness:
+The repository includes a standalone ComfyUI test harness in `Scripts/comfy_generate.py`:
 
 ```powershell
-python Tests\comfy_generate.py --prompt "a cinematic ruined castle at sunset"
+python Scripts\comfy_generate.py --prompt "a cinematic ruined castle at sunset"
 ```
 
 This script is intended for local ComfyUI testing outside the main app. It loads `config.json`, reads the `llm_image_details` block, edits an API-format workflow, submits it to ComfyUI, waits for completion, downloads the result, and saves the generated image locally.
@@ -198,15 +217,15 @@ All paths are resolved relative to the project root, so you can run the script f
 Examples:
 
 ```powershell
-python Tests\comfy_generate.py --prompt "a grim post-apocalyptic tower block at sunset"
-python Tests\comfy_generate.py --prompt "a cinematic forest shrine at dawn" --no-show
-python Tests\comfy_generate.py --prompt "an abandoned shopping centre in the rain" --base-pixels 1536
-python Tests\comfy_generate.py --workflow Assets\workflow_api.json --prompt "a futuristic skyline at blue hour"
+python Scripts\comfy_generate.py --prompt "a grim post-apocalyptic tower block at sunset"
+python Scripts\comfy_generate.py --prompt "a cinematic forest shrine at dawn" --no-show
+python Scripts\comfy_generate.py --prompt "an abandoned shopping centre in the rain" --base-pixels 1536
+python Scripts\comfy_generate.py --workflow Assets\workflow_api.json --prompt "a futuristic skyline at blue hour"
 ```
 
 ### What the script edits in the workflow
 
-`Tests/comfy_generate.py` currently auto-updates these common ComfyUI node types:
+`Scripts/comfy_generate.py` currently auto-updates these common ComfyUI node types:
 
 - `CheckpointLoaderSimple`: replaces the checkpoint name with `image_model`
 - `CLIPTextEncode`: replaces the first positive prompt node with your prompt
@@ -221,7 +240,7 @@ It then:
 4. downloads the first generated image via `GET /view`
 5. saves the output with a prompt-based timestamped filename
 
-The filename looks like this:
+The saved file name looks like this:
 
 ```text
 output/a_grim_post_apocalyptic_tower_block_at_sunset_20260412_143522.png
@@ -229,7 +248,7 @@ output/a_grim_post_apocalyptic_tower_block_at_sunset_20260412_143522.png
 
 ### Workflow expectations
 
-The bundled workflow at `Assets/workflow_api.json` is a ComfyUI API export that matches the script’s assumptions. It currently contains the following key node types:
+The bundled workflow at `Assets/workflow_api.json` is a ComfyUI API export that matches the script’s assumptions. It currently expects the following key node types:
 
 - `CheckpointLoaderSimple`
 - `EmptyLatentImage`
@@ -255,21 +274,40 @@ The default local endpoint is expected to be:
 http://127.0.0.1:8188
 ```
 
+## Provider scaffolding helper
+
+`Scripts/scaffold_provider.py` can generate a starter provider package under `src/classes/providers/<provider_slug>`.
+
+Example:
+
+```powershell
+python Scripts\scaffold_provider.py tiktok
+python Scripts\scaffold_provider.py bluesky --class-prefix BlueSky --display-name Bluesky --service-name "Bluesky Automator"
+```
+
+It creates:
+
+- `__init__.py`
+- `controller.py`
+- `service.py`
+
+The generated service class is intentionally a stub so you can wire in provider-specific browser, content, and upload logic.
+
 ## Repository layout
 
 - `src/` - application code and entrypoints
-- `src/classes/` - provider-specific controllers and shared menu flow
-- `Scripts/` - local validation utilities such as `preflight_checks.py`
-- `Assets/` - static resources, including the default ComfyUI workflow
-- `Tests/` - standalone testing utilities such as `comfy_generate.py`
+- `src/classes/` - provider-specific controllers and the shared account flow
+- `src/classes/providers/` - provider implementations for YouTube, Twitter, and LinkedIn
+- `Scripts/` - local validation utilities such as `preflight_checks.py`, `comfy_generate.py`, and `scaffold_provider.py`
+- `Assets/` - static resources, including the default banner and ComfyUI workflow
 - `output/` - generated files and other runtime artifacts
 
 ## Current limitations
 
-- the launcher is menu-driven, but the overall automation flows are still lightweight scaffolding
+- the launcher is menu-driven, but the overall automation flows are still scaffold-level
+- provider services currently only verify wiring and print placeholder output for generation/upload actions
 - the config layer still has some legacy drift between nested and top-level key lookups
-- `Tests/comfy_generate.py` is a standalone utility, not yet wired into the main runtime
-- the ComfyUI workflow tester assumes a compatible workflow structure with the node types listed above
+- `Scripts/comfy_generate.py` assumes a compatible ComfyUI workflow structure with the node types listed above
 - there is no documented end-to-end social automation workflow yet
 
 ## License
