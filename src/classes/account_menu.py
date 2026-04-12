@@ -8,11 +8,15 @@ from cache import add_account, get_accounts, remove_account
 from config import get_firefox_profile_path
 from status import error, info, question, success, warning
 
-
 class BaseAccountMenuController:
     """Shared account menu flow used by provider-specific controllers."""
 
-    def __init__(self, provider: str, service_name: str, account_fields: list[tuple[str, str]]) -> None:
+    def __init__(
+        self,
+        provider: str,
+        service_name: str,
+        account_fields: list[tuple[str, str]],
+    ) -> None:
         self.provider = provider
         self.service_name = service_name
         self.account_fields = account_fields
@@ -22,26 +26,28 @@ class BaseAccountMenuController:
             print_banner()
             info(f"Starting {self.service_name}...")
             accounts = get_accounts(self.provider)
+
             if not accounts:
                 if not self._handle_empty_accounts():
                     return
                 continue
 
             action, account = self._show_accounts(accounts)
+
             if action == "back":
                 info("Returning to main menu...")
                 return
+
             if action == "refresh":
                 continue
 
-            selected_account = account
-            success(
-                f"Selected account: "
-                f"{selected_account.get('nickname', selected_account.get('id', 'Unknown'))}"
-            )
-            self.test_service(selected_account)
-            question("Press Enter to return to account menu...", show_emoji=False)
-            continue
+            if action == "selected" and account is not None:
+                success(
+                    f"Selected account: "
+                    f"{account.get('nickname', account.get('id', 'Unknown'))}"
+                )
+                self.run_account_session(account)
+                continue
 
     def _handle_empty_accounts(self) -> bool:
         while True:
@@ -107,6 +113,7 @@ class BaseAccountMenuController:
             ])
 
         print(table)
+
         selection = question(
             "Select an account to start "
             "(or 'd' to delete, 'n' to create new account, 'b' to return): "
@@ -140,6 +147,7 @@ class BaseAccountMenuController:
         print_banner()
         info(f"Starting {self.service_name}...")
         info(f"Cached {self.service_name} accounts found:")
+
         table = PrettyTable()
         table.field_names = ["ID", "UUID", "Nickname", "Niche"]
 
@@ -152,7 +160,11 @@ class BaseAccountMenuController:
             ])
 
         print(table)
-        selection = question("Enter account ID number to delete (or 'b' to return): ").strip().lower()
+
+        selection = question(
+            "Enter account ID number to delete (or 'b' to return): "
+        ).strip().lower()
+
         if selection in {"b", "back", "q", "quit"}:
             return
 
@@ -168,12 +180,15 @@ class BaseAccountMenuController:
 
         account = accounts[selected_index]
         removed = remove_account(self.provider, account.get("id", ""))
+
         if removed:
-            success(f"Deleted account: {account.get('nickname', account.get('id', 'Unknown'))}")
-            return
+            success(
+                f"Deleted account: "
+                f"{account.get('nickname', account.get('id', 'Unknown'))}"
+            )
+        else:
+            error("Failed to delete account.")
 
-        error("Failed to delete account.")
-
-    def test_service(self, account: dict) -> None:
+    def run_account_session(self, account: dict) -> None:
         raise NotImplementedError
 

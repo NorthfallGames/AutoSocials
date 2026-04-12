@@ -17,3 +17,8 @@ SUPPORTED_PROVIDERS = frozenset({
     "youtube",
     "linkedin",
 })
+
+COMMON_ACCOUNT_FIELDS = [
+    ("nickname", "a nickname for this account"),
+    ("niche", "the account niche"),
+]
