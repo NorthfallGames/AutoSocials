@@ -1,0 +1,1 @@
+Please generate a YouTube Video Description for the following script: {script}. Only return the description, nothing else.

@@ -32,5 +32,9 @@
     "NN_tts_device_comments": "TTS device selection: auto, cpu, or cuda. On Windows, auto defaults to CPU for stability; set cuda to force GPU.",
     "tts_voice_file": "Assets\\TTS_Voice.wav",
     "NN_tts_voice_file_comments": "This should be the path to a .wav file that Chatterbox can use as a voice. The file should be a recording of the voice you want to use for TTS. Make sure the audio is clear and of good quality for the best results. You can use any .wav file, but it's recommended to use a recording of the voice you want to synthesize for better results."
+  },
+  "youtube_details": {
+    "script_sentence_length": "4",
+    "NN_script_sentence_length_comments": ""
   }
 }

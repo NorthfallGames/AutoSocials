@@ -25,7 +25,6 @@ def assert_folder_structure() -> None:
     if not os.path.exists(os.path.join(ROOT_DIR, ".as")):
         if get_verbose():
             print(colored(f"=> Creating .as folder at {os.path.join(ROOT_DIR, '.as')}", "green"))
-        # @TODO remove this later in development
         os.makedirs(os.path.join(ROOT_DIR, ".as"))
 
 def rem_temp_files() -> None:
@@ -62,7 +61,7 @@ def get_tts_voice_file() -> str:
             File location (str): The file location of the TTS voice
         """
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("tts_details").get("tts_voice_file").strip().lower()
+        return json.load(file).get("tts_details", {}).get("tts_voice_file").strip().lower()
 
 def get_tts_device() -> str:
     """
@@ -73,6 +72,23 @@ def get_tts_device() -> str:
         """
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
         return json.load(file).get("tts_details", {}).get("tts_device", "cpu").strip().lower()
+
+def get_script_sentence_length() -> int:
+    """
+    Gets the forced script's sentence length.
+    Returns 4 if not set or invalid.
+
+    Returns:
+        int: Length of script sentences
+    """
+    try:
+        with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+            config_json = json.load(file)
+        value = config_json.get("youtube_details", {}).get("script_sentence_length", 4)
+        return int(value)
+    except (ValueError, TypeError):
+        # If conversion fails (e.g. "abc"), fallback
+        return 4
 
 # Fix all the below
 def get_llm_provider() -> str:

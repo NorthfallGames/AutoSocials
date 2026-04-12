@@ -1,7 +1,10 @@
 from classes.providers.base_service import BaseProviderService
-from status import error, info, success
+from status import error, info, success, warning
 from importlib import import_module
+import re
+from prompt_loader import load_and_render_prompt
 
+from config import *
 from Tts import TTS
 from lm_provider import generate_text
 
@@ -49,19 +52,20 @@ class YouTubeService(BaseProviderService):
             topic (str): The generated topic.
         """
         info("Loading prompt:")
-        load_and_render_prompt = import_module("prompt_loader").load_and_render_prompt
         prompt = load_and_render_prompt(
-            prompt_name="generate_script",
+            prompt_name="generate_topic",
             provider="youtube",
             provider_name="YouTube",
             niche=self.niche,
         )
-        success(f"Prompt loaded successfully: {prompt} ")
+        if get_verbose():
+            success(f"Prompt loaded successfully: {prompt} ")
         info("Generating topic using LLM...")
 
         # Get the response
         completion = generate_text(prompt)
-        success(f"Topic generated successfully: {completion}")
+        if get_verbose():
+            success(f"Topic generated successfully: {completion}")
 
         if not completion:
             error("Failed to generate Topic.")
@@ -69,6 +73,96 @@ class YouTubeService(BaseProviderService):
         self.subject = completion
 
         return completion
+
+    def generate_script(self) -> str | None:
+        """
+        Generate a script for a video, depending on the subject of the video, the number of paragraphs, and the AI model.
+
+        Returns:
+            script (str): The script of the video.
+        """
+        sentence_length = get_script_sentence_length()
+        info("Loading script generator:")
+        prompt = load_and_render_prompt(
+            prompt_name="generate_script",
+            provider="youtube",
+            provider_name="YouTube",
+            sentence_length=sentence_length,
+            subject=self.subject,
+        )
+        if get_verbose():
+            success(f"Prompt loaded successfully: {prompt} ")
+        info("Generating script using LLM...")
+
+        completion = generate_text(prompt)
+        if get_verbose():
+            success(f"Script generated successfully: {completion}")
+
+        # Apply regex to remove *
+        completion = re.sub(r"\*", "", completion)
+
+        if not completion:
+            error("The generated script is empty.")
+
+        if len(completion) > 5000:
+            warning("Generated Script is too long. Retrying...")
+            return self.generate_script()
+
+        self.script = completion
+
+        return completion
+
+    def generate_metadata(self) -> dict:
+        """
+        Generates Video metadata for the to-be-uploaded YouTube Short (Title, Description).
+
+        Returns:
+            metadata (dict): The generated metadata.
+        """
+
+        info("Loading Title generator:")
+        prompt = load_and_render_prompt(
+            prompt_name="generate_title",
+            provider="youtube",
+            provider_name="YouTube",
+            subject=self.subject,
+        )
+        if get_verbose():
+            success(f"Prompt loaded successfully: {prompt} ")
+
+        # Generate the title
+        title = generate_text(prompt)
+        if get_verbose():
+            success(f"Title generated successfully: {title}")
+
+        #### Self care prompt - to do before retrying title generation
+        if len(title) > 100:
+            if get_verbose():
+                warning("Generated Title is too long. Retrying...")
+            return self.generate_metadata()
+
+        # Generate the description
+        info("Loading Title generator:")
+        prompt = load_and_render_prompt(
+            prompt_name="generate_description",
+            provider="youtube",
+            provider_name="YouTube",
+            script=self.script,
+        )
+        if get_verbose():
+            success(f"Prompt loaded successfully: {prompt} ")
+
+        description =generate_text(prompt)
+        if get_verbose():
+            success(f"Description generated successfully: {description}")
+
+        self.metadata = {"title": title, "description": description}
+
+        return self.metadata
+
+        self.metadata = {"title": title, "description": description}
+
+        return self.metadata
 
     def generate_video(self) -> None:
         """
@@ -93,6 +187,8 @@ class YouTubeService(BaseProviderService):
         """
 
         self.generate_topic()
+        self.generate_script()
+        self.generate_metadata()
 
 
     def upload_video(self) -> None:

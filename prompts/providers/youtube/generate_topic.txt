@@ -1,0 +1,1 @@
+Please generate a specific video idea that takes about the following topic: {niche}. Make it exactly one sentence. Only return the topic, nothing else.
