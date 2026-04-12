@@ -22,7 +22,6 @@
 ## Product & Workflow
 
 - [ ] Document the full end-to-end automation flow from setup to posting
-- [ ] Decide whether `Tests/comfy_generate.py` stays a standalone utility or becomes part of the main app
 - [ ] Add provider-specific account/session actions so each menu choice performs meaningful work
 - [ ] Review and tighten onboarding docs so setup steps match the actual runtime behavior
 
@@ -35,3 +34,4 @@
 ## Done
 
 - [x] ~~Update preflight to check if the Firefox profile is valid~~
+- [x] ~~Decide whether `Tests/comfy_generate.py` stays a standalone utility or becomes part of the main app~~.... Moved them all into the 'Scripts' folder and created 'Scripts/docs.md' to clarify their purpose as show usages.
