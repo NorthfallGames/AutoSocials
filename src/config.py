@@ -90,6 +90,68 @@ def get_script_sentence_length() -> int:
         # If conversion fails (e.g. "abc"), fallback
         return 4
 
+def get_image_workflow() -> str:
+    """
+         Gets the path of the workflow.
+
+         Returns:
+             File location (str): The file location of the workflow
+         """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return str(json.load(file).get("llm_image_details", {}).get("image_default_workflow", ""))
+
+def get_image_model() -> str:
+    """
+         Gets the image model needed for image gen.
+
+         Returns:
+             Model Name (str): The model name
+         """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return str(json.load(file).get("llm_image_details", {}).get("image_model", "")).strip()
+
+def get_aspect_ratio() -> str:
+    """
+         Gets the image aspect ratio.
+
+         Returns:
+             Image Aspect Ratio (str): The image aspect ratio
+         """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return json.load(file).get("llm_image_details", {}).get("image_aspect_ratio", "16:9").strip()
+
+def get_image_pixels() -> int:
+    """
+    Gets the image pixels.
+
+    Returns:
+        int: The image pixels
+    """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return int(json.load(file).get("llm_image_details", {}).get("image_pixels", 1024))
+
+def get_image_gen_base() -> str:
+    """
+         Gets the image generation base URL.
+
+         Returns:
+             URL (str): The image generation base URL
+         """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return json.load(file).get("llm_image_details", {}).get("image_api_base_url").strip()
+
+def get_image_gen_api_key() -> str:
+    """
+         Gets the image generation api key if needed.
+
+         Returns:
+             api key (str): The API key for image generation
+         """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return json.load(file).get("llm_image_details", {}).get("image_api_key").strip()
+
+
+
 # Fix all the below
 def get_llm_provider() -> str:
     """

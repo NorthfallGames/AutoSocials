@@ -2,12 +2,14 @@ from classes.providers.base_service import BaseProviderService
 from importlib import import_module
 import re
 from typing import List
+import json
 
 from status import error, info, success, warning
 from prompt_loader import load_and_render_prompt
 from config import *
 from Tts import TTS
 from lm_provider import generate_text
+from comfyui import ComfyUI
 
 class YouTubeService(BaseProviderService):
     """
@@ -21,13 +23,7 @@ class YouTubeService(BaseProviderService):
     - account-specific YouTube actions
     """
 
-    def __init__(
-        self,
-        account_uuid: str,
-        account_nickname: str,
-        firefox_profile_path: str,
-        niche: str,
-    ) -> None:
+    def __init__(self, account_uuid: str, account_nickname: str, firefox_profile_path: str, niche: str, ) -> None:
         """
         Initialise the YouTube service.
 
@@ -44,6 +40,7 @@ class YouTubeService(BaseProviderService):
             niche=niche,
         )
 
+        self.comfy = ComfyUI()
 
     def generate_topic(self) -> str:
         """
@@ -165,14 +162,8 @@ class YouTubeService(BaseProviderService):
 
         return self.metadata
 
-    def generate_prompts(self) -> List[str]:
-        """
-        Generates AI Image Prompts based on the provided Video Script.
-
-        Returns:
-            image_prompts (List[str]): Generated List of image prompts.
-        """
-        n_prompts = len(self.script) / 3
+    def generate_prompts(self) -> list[str]:
+        n_prompts = max(1, int(len(self.script) / 3))
 
         info("Loading Title generator:")
         prompt = load_and_render_prompt(
@@ -183,46 +174,69 @@ class YouTubeService(BaseProviderService):
             subject=self.subject,
             script=self.script
         )
-        if get_verbose():
-            success(f"Prompt loaded successfully: {prompt} ")
 
         completion = (
-            str(generate_text(prompt))
+            str(generate_text(prompt) or "")
             .replace("```json", "")
             .replace("```", "")
+            .strip()
         )
 
         image_prompts = []
 
-        if "image_prompts" in completion:
-            image_prompts = json.loads(completion)["image_prompts"]
-        else:
-            try:
-                image_prompts = json.loads(completion)
-                if get_verbose():
-                    info(f" => Generated Image Prompts: {image_prompts}")
-            except Exception:
-                if get_verbose():
-                    warning(
-                        "LLM returned an unformatted response. Attempting to clean..."
-                    )
+        try:
+            parsed = json.loads(completion)
 
-                # Get everything between [ and ], and turn it into a list
-                r = re.compile(r"\[.*\]")
-                image_prompts = r.findall(completion)
-                if len(image_prompts) == 0:
-                    if get_verbose():
-                        warning("Failed to generate Image Prompts. Retrying...")
-                    return self.generate_prompts()
+            if isinstance(parsed, dict) and "image_prompts" in parsed:
+                image_prompts = parsed["image_prompts"]
+            elif isinstance(parsed, list):
+                image_prompts = parsed
+            else:
+                raise ValueError("Prompt response was not a dict or list")
+
+        except Exception:
+            warning("LLM returned an unformatted response. Attempting to clean...")
+
+            match = re.search(r"\[.*\]", completion, re.DOTALL)
+            if not match:
+                warning("Failed to generate Image Prompts. Retrying...")
+                return self.generate_prompts()
+
+            try:
+                image_prompts = json.loads(match.group(0))
+            except Exception:
+                warning("Failed to parse cleaned image prompt list. Retrying...")
+                return self.generate_prompts()
+
+        image_prompts = [
+            p.strip()
+            for p in image_prompts
+            if isinstance(p, str) and p.strip()
+        ]
 
         if len(image_prompts) > n_prompts:
-            image_prompts = image_prompts[: int(n_prompts)]
+            image_prompts = image_prompts[:n_prompts]
+
+        if not image_prompts:
+            warning("No valid image prompts were produced. Retrying...")
+            return self.generate_prompts()
 
         self.image_prompts = image_prompts
 
         success(f"Generated {len(image_prompts)} Image Prompts.")
-
         return image_prompts
+
+    def generate_image(self, prompt: str) -> str:
+        """
+        Generates an AI Image based on the given prompt using Nano Banana 2.
+
+        Args:
+            prompt (str): Reference for image generation
+
+        Returns:
+            path (str): The path to the generated image.
+        """
+        return self.comfy.generate_image(prompt)
 
     def generate_video(self) -> None:
         """
@@ -251,11 +265,8 @@ class YouTubeService(BaseProviderService):
         self.generate_metadata()
         self.generate_prompts()
 
-        """
         for prompt in self.image_prompts:
             self.generate_image(prompt)
-        """
-
 
 
     def upload_video(self) -> None:
