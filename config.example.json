@@ -1,0 +1,24 @@
+{
+  "verbose": true,
+  "firefox_profile": "",
+  "imagemagick_path": "Path to magick.exe or on linux/macOS just /usr/bin/convert",
+  "llm_details": {
+    "llm_provider": "lmstudio", // ollama, lmstudio, openrouter
+    "llm_endpoint": "qwen/qwen3.5-9b",
+    "llm_base_url": "http://127.0.0.1:11434", // Any endpoint - ollama or any openAI compatible endpoint
+    "llm_api_key": "", // API Key for the LM Models
+    "default_model": "qwen/qwen3.5-9b"
+  },
+  "llm_image_details": {
+    "llm_image_provider": "comfyui", // Stick with ComfyUI for now?
+    "image_api_base_url": "http://127.0.0.1:8188",
+    "image_api_key": "",
+    "image_model": "Illustrious\\illustriousRealism_ilXL10V30.safetensors", // e.g. "stablediffusion/stablediffusion-2.1"  - https://civitai.com/models/2354628/illustrious-realism?modelVersionId=2808370
+    "image_aspect_ratio": "9:16" // Added aspect ratio configuration to the prompt for image generation. E.g. "1:1", "16:9", "9:16"
+  },
+  "stt_details": {
+    "stt_provider": "local_whisper", // local_whisper
+    "whisper_model": "base", // tiny, base, small, medium, large
+    "whisper_device": "auto" // auto, cpu, cuda
+  }
+}

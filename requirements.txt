@@ -1,0 +1,10 @@
+wheel
+termcolor
+schedule
+requests
+openai
+ollama
+faster-whisper
+prettytable
+websocket-client
+pillow
