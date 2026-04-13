@@ -3,7 +3,7 @@
 AutoSocials is a local-first automation scaffold for social-content workflows. The current codebase centers on three practical entrypoints:
 
 - a menu-driven CLI launcher in `src/main.py`
-- provider/account helpers for YouTube, Twitter, and LinkedIn in `src/classes/`
+- provider/account helpers for YouTube, Twitter, LinkedIn, and Facebook in `src/classes/`
 - standalone utilities in `Scripts/` for preflight checks, ComfyUI image generation, and provider scaffolding
 
 The repository targets **Python 3.12**.
@@ -12,7 +12,7 @@ The repository targets **Python 3.12**.
 
 - validates local readiness with `Scripts/preflight_checks.py`
 - opens a simple CLI in `src/main.py`
-- lets you create, list, select, and delete cached provider accounts for YouTube, Twitter, and LinkedIn
+- lets you create, list, select, and delete cached provider accounts for YouTube, Twitter, LinkedIn, and Facebook
 - stores and reads configuration from `config.json`
 - generates images through a ComfyUI API workflow using `Scripts/comfy_generate.py`
 - loads editable LM prompt templates from `prompts/` via `src/prompt_loader.py`
@@ -38,6 +38,7 @@ Copy-Item config.example.json config.json
 The current `requirements.txt` includes:
 
 - `wheel`
+- `setuptools<81`
 - `termcolor`
 - `schedule`
 - `requests`
@@ -47,6 +48,9 @@ The current `requirements.txt` includes:
 - `prettytable`
 - `websocket-client`
 - `pillow`
+- `chatterbox-tts`
+- `resemble-perth`
+- `peft`
 
 ## Configuration
 
@@ -61,7 +65,6 @@ The current runtime expects a nested layout:
   "imagemagick_path": "Path to magick.exe or on linux/macOS just /usr/bin/convert",
   "llm_details": {
     "llm_provider": "lmstudio",
-    "llm_endpoint": "qwen/qwen3.5-9b",
     "llm_base_url": "http://127.0.0.1:11434",
     "llm_api_key": "",
     "default_model": "qwen/qwen3.5-9b"
@@ -77,6 +80,14 @@ The current runtime expects a nested layout:
     "stt_provider": "local_whisper",
     "whisper_model": "base",
     "whisper_device": "auto"
+  },
+  "tts_details": {
+    "tts_provider": "chatterbox",
+    "tts_device": "auto",
+    "tts_voice_file": "Assets\\TTS_Voice.wav"
+  },
+  "youtube_details": {
+    "script_sentence_length": "4"
   }
 }
 ```
@@ -92,7 +103,6 @@ The current runtime expects a nested layout:
 Used for text-model provider selection and model defaults.
 
 - `llm_provider`: `ollama`, `lmstudio`, or `openrouter`
-- `llm_endpoint`: model name or endpoint identifier used by the app
 - `llm_base_url`: local or remote base URL for the selected provider
 - `llm_api_key`: API key used for OpenAI-compatible providers; required for OpenRouter (or set `LLM_API_KEY` in your environment)
 - `default_model`: fallback model name used by the app
@@ -114,6 +124,20 @@ Used for speech-to-text configuration.
 - `stt_provider`: currently expected to be `local_whisper`
 - `whisper_model`: Whisper model size such as `base`, `small`, or `medium`
 - `whisper_device`: runtime target such as `auto`, `cpu`, or `cuda`
+
+### `tts_details`
+
+Used for text-to-speech configuration.
+
+- `tts_provider`: currently `chatterbox`
+- `tts_device`: runtime target such as `auto`, `cpu`, or `cuda`
+- `tts_voice_file`: path to the reference `.wav` voice file
+
+### `youtube_details`
+
+YouTube-specific generation settings.
+
+- `script_sentence_length`: target sentence count used by the script prompt generator
 
 ### Legacy config drift
 
@@ -164,6 +188,7 @@ The current provider menu includes:
 - YouTube
 - Twitter
 - LinkedIn
+- Facebook
 - Quit
 
 Each provider uses the shared account manager in `src/classes/account_menu.py` to:
@@ -186,11 +211,11 @@ After selection, each provider opens a small provider-specific menu with:
 - show account details
 - back
 
-At the moment the provider services are lightweight scaffolds: `test_connection()` confirms the service wiring, while `generate_video()` and `upload_video()` are still placeholders.
+At the moment, `test_connection()` confirms service wiring for all providers. YouTube has a partial generation pipeline, while Twitter, LinkedIn, and Facebook still keep `generate_video()` and `upload_video()` as placeholders.
 
 ## Prompt templates
 
-Prompt text for LM-driven tasks now lives in a dedicated `prompts/` folder so you can tune wording without editing Python source.
+Prompt text for LM-driven tasks lives in `prompts/` so you can tune wording without editing Python source.
 
 - shared templates: `prompts/common/`
 - provider-specific templates: `prompts/providers/<provider>/`
@@ -201,7 +226,12 @@ The loader in `src/prompt_loader.py` supports:
 - `render_prompt(template, context={...})` to inject placeholders like `{niche}`
 - `load_and_render_prompt(...)` as a convenience wrapper
 
-Current provider services load `generate_video.txt` from their provider folder, falling back to `prompts/common/generate_video.txt` if needed.
+Current prompt files in this repo include:
+
+- `prompts/common/generic_prompt.txt`
+- YouTube templates under `prompts/providers/youtube/` (`generate_topic.txt`, `generate_script.txt`, `generate_title.txt`, `generate_description.txt`, `generate_prompts.txt`, `generate_video.txt`)
+
+Note: non-YouTube providers currently call `generate_video` via the prompt loader, but only YouTube prompt templates are included by default.
 
 ## ComfyUI workflow testing
 
@@ -313,7 +343,7 @@ The generated service class is intentionally a stub so you can wire in provider-
 
 - `src/` - application code and entrypoints
 - `src/classes/` - provider-specific controllers and the shared account flow
-- `src/classes/providers/` - provider implementations for YouTube, Twitter, and LinkedIn
+- `src/classes/providers/` - provider implementations for YouTube, Twitter, LinkedIn, and Facebook
 - `Scripts/` - local validation utilities such as `preflight_checks.py`, `comfy_generate.py`, and `scaffold_provider.py`
 - `Assets/` - static resources, including the default banner and ComfyUI workflow
 - `prompts/` - editable prompt templates used by LM-related flows
@@ -322,7 +352,7 @@ The generated service class is intentionally a stub so you can wire in provider-
 ## Current limitations
 
 - the launcher is menu-driven, but the overall automation flows are still scaffold-level
-- provider services currently only verify wiring and print placeholder output for generation/upload actions
+- only YouTube has a partial generation pipeline; Twitter, LinkedIn, and Facebook services remain placeholder stubs for generation/upload
 - the config layer still has some legacy drift between nested and top-level key lookups
 - `Scripts/comfy_generate.py` assumes a compatible ComfyUI workflow structure with the node types listed above
 - there is no documented end-to-end social automation workflow yet
