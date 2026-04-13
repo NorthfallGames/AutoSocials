@@ -9,24 +9,18 @@ class TTS:
     def __init__(self) -> None:
         self.tts_voice_file = get_tts_voice_file()
         self.tts_device = get_tts_device()
-        self.output_path = os.path.join(ROOT_DIR, "output", "test.wav")
 
         if getattr(perth, "PerthImplicitWatermarker", None) is None:
             print("Perth watermarker unavailable, falling back to DummyWatermarker.")
             perth.PerthImplicitWatermarker = perth.DummyWatermarker
 
-    def generate_test_audio(self) -> None:
-        text = """
-[happy] Hey there! This is a cheerful voice.
-[sad] ...but sometimes things feel a bit down.
-[angry] And occasionally, things get frustrating!
-"""
+    def generate_test_audio(self, text: str, path: str) -> str:
 
         voice_file_path = os.path.join(ROOT_DIR, self.tts_voice_file)
         if not os.path.exists(voice_file_path):
             raise FileNotFoundError(f"Voice file not found: {voice_file_path}")
 
-        os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
 
         tts = ChatterboxTurboTTS.from_pretrained(device=self.tts_device)
 
@@ -40,8 +34,9 @@ class TTS:
             if audio.dim() == 1:
                 audio = audio.unsqueeze(0)
 
-            torchaudio.save(self.output_path, audio.cpu(), 24000)
+            torchaudio.save(path, audio.cpu(), 24000)
         else:
             raise TypeError(f"Unexpected audio output type: {type(audio)}")
 
-        print(f"Audio saved to: {self.output_path}")
+        print(f"Audio saved to: {path}")
+        return path

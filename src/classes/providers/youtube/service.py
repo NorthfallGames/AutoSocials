@@ -3,6 +3,7 @@ from importlib import import_module
 import re
 from typing import List
 import json
+import uuid
 
 from status import error, info, success, warning
 from prompt_loader import load_and_render_prompt
@@ -238,6 +239,31 @@ class YouTubeService(BaseProviderService):
         """
         return self.comfy.generate_image(prompt)
 
+    def generate_script_to_speech(self) -> str:
+        """
+        Converts the generated script into Speech using Chatterbox and returns the path to the wav file.
+
+        Args:
+            tts_instance (tts): Instance of TTS Class.
+
+        Returns:
+            path_to_wav (str): Path to generated audio (WAV Format).
+        """
+        path = os.path.join(ROOT_DIR, "output", "audio", str(uuid.uuid4()) + ".wav")
+
+        # Clean script, remove every character that is not a word character, a space, a period, a question mark, or an exclamation mark.
+        self.script = re.sub(r"[^\w\s.?!]", "", self.script)
+
+        tts = TTS()
+        tts.generate_test_audio(self.script, path)
+
+        self.tts_path = path
+
+        if get_verbose():
+            info(f' => Wrote TTS to "{path}"')
+
+        return path
+
     def generate_video(self) -> None:
         """
         Stub for future video generation logic.
@@ -267,6 +293,9 @@ class YouTubeService(BaseProviderService):
 
         for prompt in self.image_prompts:
             self.generate_image(prompt)
+
+        # @TODO Need to test this function to make sure that it works
+        self.generate_script_to_speech()
 
 
     def upload_video(self) -> None:
