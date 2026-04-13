@@ -166,7 +166,7 @@ class YouTubeService(BaseProviderService):
     def generate_prompts(self) -> list[str]:
         n_prompts = max(1, int(len(self.script) / 3))
 
-        info("Loading Title generator:")
+        info("Loading Image Prompt generator:")
         prompt = load_and_render_prompt(
             prompt_name="generate_prompts",
             provider="youtube",

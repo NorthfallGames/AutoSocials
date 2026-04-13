@@ -3,7 +3,7 @@
 ## High Priority
 
 - [ ] Finish provider support for the remaining platforms
-  - [ ] `Youtube` - ~50% done
+  - [ ] `Youtube` - ~80% done
   - [ ] `Twitter`
   - [ ] `Instagram`
   - [ ] `LinkedIn`
@@ -40,3 +40,5 @@
 - [x] ~~Update preflight to check if the Firefox profile is valid~~
 - [x] ~~Decide whether `Tests/comfy_generate.py` stays a standalone utility or becomes part of the main app~~.... Moved them all into the 'Scripts' folder and created 'Scripts/docs.md' to clarify their purpose as show usages.
 - [x] ~~Chatterbox TTS to have custom voices instead of AI sounding robotic voice~~
+- [x] ~~Tested with all 3 providers Ollama, LM Studio, and openrouter~~
+- [x] ~~ComfyUi Image generation working within the Youtube Scripts~~
